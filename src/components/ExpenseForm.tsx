@@ -10,7 +10,7 @@ const CATEGORIES: ExpenseCategory[] = [
   'グッズ',
   'チケット',
   '遠征費・交通費',
-  '推し貯金・徳積み',
+  '貯金',
   'その他',
 ];
 
@@ -260,7 +260,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
             ? '確認中...'
             : forceSubmit
             ? '⚠️ 重複を承知で登録する'
-            : '💖 推しのために記録する'}
+            : '💖 記録する'}
         </button>
 
       </form>
