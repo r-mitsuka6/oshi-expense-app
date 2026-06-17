@@ -1,3 +1,4 @@
+// src/components/ExpenseForm.tsx
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -9,7 +10,7 @@ const CATEGORIES: ExpenseCategory[] = [
   'グッズ',
   'チケット',
   '遠征費・交通費',
-  '貯金',
+  '推し貯金・徳積み',
   'その他',
 ];
 
@@ -18,7 +19,6 @@ const MEMO_MAX_LENGTH = 100;
 interface ExpenseFormProps {
   onAdd: (draft: Omit<Expense, 'id' | 'createdAt'>) => void;
   checkDuplicate: (draft: Omit<Expense, 'id' | 'createdAt'>) => DuplicateCheckResult;
-  /** フォームの初期日付（選択中の月に対応） */
   defaultDate: string;
 }
 
@@ -37,7 +37,6 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
   const [forceSubmit, setForceSubmit]   = useState(false);
   const [showSuccess, setShowSuccess]   = useState(false);
 
-  // 月切り替え時、フォームの日付を選択中の月の初期値に同期する
   useEffect(() => {
     setDate(defaultDate);
   }, [defaultDate]);
@@ -53,7 +52,6 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
     setForceSubmit(false);
   };
 
-  // onFocus/onBlur を共通化。input / textarea 両対応。
   const focusProps = {
     onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       e.target.style.borderColor = currentColor.primary;
@@ -170,7 +168,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-medium text-gray-500 mb-1.5">
               金額（円）
             </label>
@@ -185,7 +183,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
               {...focusProps}
             />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-medium text-gray-500 mb-1.5">
               日付
             </label>
@@ -194,7 +192,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
               value={date}
               onChange={(e) => handleFieldChange(() => setDate(e.target.value))}
               required
-              className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:bg-white transition-colors"
+              className="w-full min-w-0 px-3 py-3 rounded-2xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:bg-white transition-colors"
               {...focusProps}
             />
           </div>
@@ -262,7 +260,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
             ? '確認中...'
             : forceSubmit
             ? '⚠️ 重複を承知で登録する'
-            : '💖 記録する'}
+            : '💖 推しのために記録する'}
         </button>
 
       </form>

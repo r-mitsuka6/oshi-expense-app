@@ -1,3 +1,4 @@
+// src/components/ColorPickerModal.tsx
 'use client';
 
 import { useRef, memo } from 'react';
@@ -87,22 +88,28 @@ export const ColorPickerModal = memo(({ isOpen, onClose }: ColorPickerModalProps
         </div>
 
         <div className="flex items-center gap-4">
-          <div
-            className="w-14 h-14 rounded-2xl shadow-sm flex-shrink-0 cursor-pointer border-2 border-gray-100 overflow-hidden"
-            onClick={() => colorInputRef.current?.click()}
-            aria-label="カスタムカラーを選択"
-          >
-            <div
-              className="w-full h-full"
-              style={{ backgroundColor: currentColor.primary }}
-            />
+
+          {/*
+            input[type="color"] をユーザーの直接タップ対象にする。
+            以前は sr-only（1px×1pxに縮小）で隠し、親divのonClickから
+            colorInputRef.current?.click() を間接的に呼んでいたが、
+            モバイルブラウザ（特にiOS Safari）はユーザーの直接タップ以外の
+            click()発火ではネイティブのカラーピッカーUIを起動しないことがあるため、
+            input自体を可視サイズのまま relative + opacity-0 で透明化し、
+            上に重ねたプレビュー用divはポインタイベントを無視させる構成に変更した。
+          */}
+          <div className="relative w-14 h-14 rounded-2xl shadow-sm flex-shrink-0 border-2 border-gray-100 overflow-hidden">
             <input
               ref={colorInputRef}
               type="color"
               defaultValue={currentColor.primary}
               onChange={handleCustomChange}
-              className="sr-only"
-              aria-hidden="true"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              aria-label="カスタムカラーを選択"
+            />
+            <div
+              className="w-full h-full pointer-events-none"
+              style={{ backgroundColor: currentColor.primary }}
             />
           </div>
 
