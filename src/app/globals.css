@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* メンカラ CSS変数（ThemeContext から動的に上書きされる） */
+  --color-primary: #F472B6;
+  --color-secondary: #FDF2F8;
+  --color-oshi-text: #BE185D;
+
+  /* 固定トーキン */
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* ベースフォント */
+html {
+  font-family: 'Noto Sans JP', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #FAF9FB;
+  color: #1a1a1a;
+  min-height: 100dvh;
+}
+
+/* スキデコードを右表示（モポト風） */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tailwind で使う CSS 変数ブリッジ */
+@layer utilities {
+  .bg-primary        { background-color: var(--color-primary); }
+  .bg-secondary-oshi { background-color: var(--color-secondary); }
+  .text-oshi         { color: var(--color-oshi-text); }
+  .border-primary    { border-color: var(--color-primary); }
+  .ring-primary      { --tw-ring-color: var(--color-primary); }
+}
