@@ -213,8 +213,14 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
               独自に計算するため、input自体の幅・高さに外枠を依存させると
               iOS Safari / Android Chrome / PC でサイズがずれて見える。
               そこで外枠の見た目（border・bg・角丸・高さ）はこのdivが担い、
-              input は absolute で重ねて div のサイズに完全追従させることで、
-              どの環境でも金額欄と全く同じ外枠サイズになるようにしている。
+              input は absolute で重ねて div のサイズに完全追従させる。
+
+              文字の縦位置は padding ではなく leading-[46px]（line-height）
+              で div の高さ(h-[46px])に一致させている。padding による
+              上下中央寄せはブラウザのネイティブUI計算次第でズレうるが、
+              line-height を枠の高さと同値にする方法はブラウザ間で
+              再現性が高いため、こちらを採用している。
+
               枠線色は focus 時に切り替えたいが、input自体は border-none の
               ため、focusProps（input.style書き換え方式）ではなく
               onFocusCapture/onBlurCaptureでこのdiv自身の枠線を操作する。
@@ -235,7 +241,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
                 value={date}
                 onChange={(e) => handleFieldChange(() => setDate(e.target.value))}
                 required
-                className="absolute inset-0 w-full h-full px-4 py-3 rounded-2xl border-none bg-transparent text-sm focus:outline-none"
+                className="absolute inset-0 w-full h-full px-4 rounded-2xl border-none bg-transparent text-sm leading-[46px] focus:outline-none"
               />
             </div>
           </div>
