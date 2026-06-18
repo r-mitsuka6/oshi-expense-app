@@ -19,12 +19,14 @@ const MEMO_MAX_LENGTH = 100;
 interface ExpenseFormProps {
   onAdd: (draft: Omit<Expense, 'id' | 'createdAt'>) => void;
   checkDuplicate: (draft: Omit<Expense, 'id' | 'createdAt'>) => DuplicateCheckResult;
+  /** フォームの初期日付（選択中の月に対応） */
   defaultDate: string;
 }
 
 export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: ExpenseFormProps) => {
   const { currentColor } = useOshiTheme();
 
+  // フォーム状態
   const [date, setDate]                   = useState(defaultDate);
   const [title, setTitle]                 = useState('');
   const [amount, setAmount]               = useState('');
@@ -32,11 +34,13 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
   const [receiptNumber, setReceiptNumber] = useState('');
   const [memo, setMemo]                   = useState('');
 
+  // UI状態
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [warning, setWarning]           = useState<string | null>(null);
   const [forceSubmit, setForceSubmit]   = useState(false);
   const [showSuccess, setShowSuccess]   = useState(false);
 
+  // 月切り替え時、フォームの日付を選択中の月の初期値に同期する
   useEffect(() => {
     setDate(defaultDate);
   }, [defaultDate]);
@@ -52,6 +56,8 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
     setForceSubmit(false);
   };
 
+  // onFocus/onBlur を共通化。input / textarea 両対応。
+  // 金額・内容・領収書番号・メモ欄はこちらを使用する。
   const focusProps = {
     onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       e.target.style.borderColor = currentColor.primary;
@@ -65,6 +71,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
     e.preventDefault();
     if (!title.trim() || !amount || isSubmitting) return;
 
+    // デバウンス：即座にボタンを無効化（連打防止）
     setIsSubmitting(true);
 
     const draft: Omit<Expense, 'id' | 'createdAt'> = {
@@ -76,6 +83,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
       memo: memo.trim() || undefined,
     };
 
+    // 重複チェック（強制登録フラグが立っていればスキップ）
     if (!forceSubmit) {
       const result = checkDuplicate(draft);
 
@@ -98,14 +106,17 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
       }
     }
 
+    // 登録実行
     onAdd(draft);
     resetForm();
 
+    // 成功フィードバック表示
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), TIMINGS.SUCCESS_FEEDBACK_MS);
     setIsSubmitting(false);
   };
 
+  // 入力変更時に警告・強制フラグをリセット
   const handleFieldChange = (fn: () => void) => {
     fn();
     setWarning(null);
@@ -115,12 +126,14 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
   return (
     <div className="mx-4 mt-4 bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
 
+      {/* セクションタイトル */}
       <h2 className="text-sm font-bold mb-4" style={{ color: currentColor.text }}>
         ✨ 新しい支出を記録する
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
+        {/* カテゴリ */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             カテゴリ
@@ -152,6 +165,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
           </div>
         </div>
 
+        {/* 内容 */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             内容
@@ -167,7 +181,10 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
           />
         </div>
 
+        {/* 金額・日付（2カラム） */}
         <div className="grid grid-cols-2 gap-3">
+
+          {/* 金額 */}
           <div className="min-w-0">
             <label className="block text-xs font-medium text-gray-500 mb-1.5">
               金額（円）
@@ -183,21 +200,49 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
               {...focusProps}
             />
           </div>
+
+          {/* 日付 */}
           <div className="min-w-0">
             <label className="block text-xs font-medium text-gray-500 mb-1.5">
               日付
             </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => handleFieldChange(() => setDate(e.target.value))}
-              required
-              className="w-full min-w-0 px-3 py-3 rounded-2xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:bg-white transition-colors"
-              {...focusProps}
-            />
+            {/*
+              外枠（見た目のサイズ）をこの relative div 側で固定する。
+              input type="date" はブラウザが内部のカレンダーUI
+              （::-webkit-datetime-edit / カレンダーアイコン等）のサイズを
+              独自に計算するため、input自体の幅・高さに外枠を依存させると
+              iOS Safari / Android Chrome / PC でサイズがずれて見える。
+              そこで外枠の見た目（border・bg・角丸・高さ）はこのdivが担い、
+              input は absolute で重ねて div のサイズに完全追従させることで、
+              どの環境でも金額欄と全く同じ外枠サイズになるようにしている。
+              枠線色は focus 時に切り替えたいが、input自体は border-none の
+              ため、focusProps（input.style書き換え方式）ではなく
+              onFocusCapture/onBlurCaptureでこのdiv自身の枠線を操作する。
+              これにより他の入力欄のJS実装には一切影響を与えない。
+            */}
+            <div
+              className="relative w-full h-[46px] rounded-2xl border bg-gray-50 transition-colors focus-within:bg-white"
+              style={{ borderColor: '#e5e7eb' }}
+              onFocusCapture={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = currentColor.primary;
+              }}
+              onBlurCapture={(e) => {
+                (e.currentTarget as HTMLDivElement).style.borderColor = '#e5e7eb';
+              }}
+            >
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => handleFieldChange(() => setDate(e.target.value))}
+                required
+                className="absolute inset-0 w-full h-full px-4 py-3 rounded-2xl border-none bg-transparent text-sm focus:outline-none"
+              />
+            </div>
           </div>
+
         </div>
 
+        {/* 領収書/注文番号（任意） */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             領収書 / 注文番号
@@ -213,6 +258,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
           />
         </div>
 
+        {/* メモ（任意） */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             メモ
@@ -232,6 +278,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
           </p>
         </div>
 
+        {/* 重複警告 */}
         {warning && (
           <div className="px-4 py-3 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-orange-700 font-medium leading-relaxed">
             {warning}
@@ -241,6 +288,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
           </div>
         )}
 
+        {/* 成功メッセージ */}
         {showSuccess && (
           <div
             className="px-4 py-3 rounded-2xl text-xs font-medium text-white text-center"
@@ -250,6 +298,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
           </div>
         )}
 
+        {/* 登録ボタン */}
         <button
           type="submit"
           disabled={isSubmitting}
