@@ -1,3 +1,4 @@
+// src/app/page.tsx
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -87,7 +88,9 @@ export default function Page() {
 
       <CategorySummary
         year={selectedYear}
+        month={selectedMonth}
         categoryTotals={yearCategoryTotals}
+        monthExpenses={monthExpenses}
       />
 
       <TabNav activeTab={activeTab} onChange={handleTabChange} />
