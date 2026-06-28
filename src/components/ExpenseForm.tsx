@@ -180,7 +180,7 @@ export const ExpenseForm = memo(({ onAdd, checkDuplicate, defaultDate }: Expense
             type="text"
             value={title}
             onChange={(e) => handleFieldChange(() => setTitle(e.target.value))}
-            placeholder="例：アクリルスタンド Vol.3"
+            placeholder="例：アニバーサリー記念グッズ Vol.3"
             required
             className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm bg-gray-50 focus:outline-none focus:bg-white transition-colors"
             {...focusProps}
